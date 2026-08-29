@@ -1,0 +1,338 @@
+{
+  "info": {
+    "name": "Resource Booking System",
+    "description": "RESTful Resource Booking System API - JWT auth, RBAC, resources & reservations CRUD, filtering, pagination.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080", "type": "string" },
+    { "key": "adminToken", "value": "", "type": "string" },
+    { "key": "userToken", "value": "", "type": "string" },
+    { "key": "resourceId", "value": "1", "type": "string" },
+    { "key": "reservationId", "value": "1", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login as Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.collectionVariables.set('adminToken', res.token);",
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Token present', () => pm.expect(res.token).to.be.a('string'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin@123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Login as User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.collectionVariables.set('userToken', res.token);",
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Token present', () => pm.expect(res.token).to.be.a('string'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"user\",\n  \"password\": \"User@123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Login - Invalid Credentials (401 check)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"wrong-password\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Resources",
+      "item": [
+        {
+          "name": "List Resources (any authenticated user)",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{userToken}}" } ],
+            "url": {
+              "raw": "{{baseUrl}}/resources?page=0&size=10",
+              "host": ["{{baseUrl}}"], "path": ["resources"],
+              "query": [ { "key": "page", "value": "0" }, { "key": "size", "value": "10" } ]
+            }
+          }
+        },
+        {
+          "name": "Get Resource by Id",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{userToken}}" } ],
+            "url": { "raw": "{{baseUrl}}/resources/{{resourceId}}", "host": ["{{baseUrl}}"], "path": ["resources", "{{resourceId}}"] }
+          }
+        },
+        {
+          "name": "Create Resource (ADMIN only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const res = pm.response.json();",
+                  "  pm.collectionVariables.set('resourceId', res.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Conference Room B\",\n  \"type\": \"ROOM\",\n  \"description\": \"6-seat room with whiteboard\",\n  \"available\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/resources", "host": ["{{baseUrl}}"], "path": ["resources"] }
+          }
+        },
+        {
+          "name": "Update Resource (ADMIN only)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Conference Room B - Updated\",\n  \"type\": \"ROOM\",\n  \"description\": \"Now with a TV\",\n  \"available\": false\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/resources/{{resourceId}}", "host": ["{{baseUrl}}"], "path": ["resources", "{{resourceId}}"] }
+          }
+        },
+        {
+          "name": "Delete Resource (ADMIN only)",
+          "request": {
+            "method": "DELETE",
+            "header": [ { "key": "Authorization", "value": "Bearer {{adminToken}}" } ],
+            "url": { "raw": "{{baseUrl}}/resources/{{resourceId}}", "host": ["{{baseUrl}}"], "path": ["resources", "{{resourceId}}"] }
+          }
+        },
+        {
+          "name": "Create Resource as USER (expect 403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{userToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Should Fail\",\n  \"type\": \"ROOM\",\n  \"description\": \"user cannot create\",\n  \"available\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/resources", "host": ["{{baseUrl}}"], "path": ["resources"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reservations",
+      "item": [
+        {
+          "name": "Create Reservation (as USER)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const res = pm.response.json();",
+                  "  pm.collectionVariables.set('reservationId', res.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{userToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resourceId\": {{resourceId}},\n  \"startTime\": \"2026-10-01T09:00:00\",\n  \"endTime\": \"2026-10-01T10:00:00\",\n  \"price\": 49.99\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/reservations", "host": ["{{baseUrl}}"], "path": ["reservations"] }
+          }
+        },
+        {
+          "name": "List My Reservations (as USER - own only)",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{userToken}}" } ],
+            "url": { "raw": "{{baseUrl}}/reservations?page=0&size=10", "host": ["{{baseUrl}}"], "path": ["reservations"],
+              "query": [ { "key": "page", "value": "0" }, { "key": "size", "value": "10" } ] }
+          }
+        },
+        {
+          "name": "List All Reservations (as ADMIN - sees everyone)",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{adminToken}}" } ],
+            "url": { "raw": "{{baseUrl}}/reservations?page=0&size=10", "host": ["{{baseUrl}}"], "path": ["reservations"],
+              "query": [ { "key": "page", "value": "0" }, { "key": "size", "value": "10" } ] }
+          }
+        },
+        {
+          "name": "Filter Reservations (status + price range + sort)",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{adminToken}}" } ],
+            "url": {
+              "raw": "{{baseUrl}}/reservations?status=PENDING&minPrice=10&maxPrice=100&page=0&size=10&sort=price,desc",
+              "host": ["{{baseUrl}}"], "path": ["reservations"],
+              "query": [
+                { "key": "status", "value": "PENDING" },
+                { "key": "minPrice", "value": "10" },
+                { "key": "maxPrice", "value": "100" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" },
+                { "key": "sort", "value": "price,desc" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Reservation by Id (owner or ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{userToken}}" } ],
+            "url": { "raw": "{{baseUrl}}/reservations/{{reservationId}}", "host": ["{{baseUrl}}"], "path": ["reservations", "{{reservationId}}"] }
+          }
+        },
+        {
+          "name": "Cancel My Reservation (as USER)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{userToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"CANCELLED\"\n}" },
+            "url": { "raw": "{{baseUrl}}/reservations/{{reservationId}}/status", "host": ["{{baseUrl}}"], "path": ["reservations", "{{reservationId}}", "status"] }
+          }
+        },
+        {
+          "name": "Confirm Reservation (as ADMIN)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"CONFIRMED\"\n}" },
+            "url": { "raw": "{{baseUrl}}/reservations/{{reservationId}}/status", "host": ["{{baseUrl}}"], "path": ["reservations", "{{reservationId}}", "status"] }
+          }
+        },
+        {
+          "name": "USER tries to Confirm own reservation (expect 403)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{userToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"CONFIRMED\"\n}" },
+            "url": { "raw": "{{baseUrl}}/reservations/{{reservationId}}/status", "host": ["{{baseUrl}}"], "path": ["reservations", "{{reservationId}}", "status"] }
+          }
+        },
+        {
+          "name": "Full Update Reservation (ADMIN only)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resourceId\": {{resourceId}},\n  \"startTime\": \"2026-10-01T11:00:00\",\n  \"endTime\": \"2026-10-01T12:00:00\",\n  \"status\": \"CONFIRMED\",\n  \"price\": 59.99\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/reservations/{{reservationId}}", "host": ["{{baseUrl}}"], "path": ["reservations", "{{reservationId}}"] }
+          }
+        },
+        {
+          "name": "Delete Reservation (ADMIN only)",
+          "request": {
+            "method": "DELETE",
+            "header": [ { "key": "Authorization", "value": "Bearer {{adminToken}}" } ],
+            "url": { "raw": "{{baseUrl}}/reservations/{{reservationId}}", "host": ["{{baseUrl}}"], "path": ["reservations", "{{reservationId}}"] }
+          }
+        },
+        {
+          "name": "USER tries to view ANOTHER user's reservation (expect 403)",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{userToken}}" } ],
+            "url": { "raw": "{{baseUrl}}/reservations/999", "host": ["{{baseUrl}}"], "path": ["reservations", "999"] }
+          }
+        },
+        {
+          "name": "Create Reservation with invalid time window (expect 400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{userToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resourceId\": {{resourceId}},\n  \"startTime\": \"2026-10-01T10:00:00\",\n  \"endTime\": \"2026-10-01T09:00:00\",\n  \"price\": 10.00\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/reservations", "host": ["{{baseUrl}}"], "path": ["reservations"] }
+          }
+        }
+      ]
+    }
+  ]
+}
