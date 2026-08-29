@@ -34,10 +34,8 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @org.springframework.beans.factory.annotation.Value("${app.cors.allowed-origins}")
-    private List<String> allowedOrigins;
+    private String allowedOriginsRaw;
 
-    // H2 console is only ever needed for local/dev debugging against an in-memory DB.
-    // It defaults to disabled so it is never accidentally exposed as a public endpoint in production.
     @org.springframework.beans.factory.annotation.Value("${spring.h2.console.enabled:false}")
     private boolean h2ConsoleEnabled;
 
@@ -90,6 +88,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+        java.util.List<String> allowedOrigins = java.util.Arrays.stream(allowedOriginsRaw.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
         configuration.setAllowedOriginPatterns(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));

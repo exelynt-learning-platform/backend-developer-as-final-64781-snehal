@@ -153,6 +153,7 @@ public class ReservationService {
 
     private void validateTimeWindow(java.time.LocalDateTime start, java.time.LocalDateTime end) {
         if (start == null || end == null) {
+            log.warn("validateTimeWindow received a null start/end time - this should have been caught by DTO validation");
             throw new BadRequestException("startTime and endTime are required");
         }
         if (!end.isAfter(start)) {

@@ -1,20 +1,27 @@
 package com.assignment.booking.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import javax.crypto.SecretKey;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Component
 public class JwtUtil {
+
+    private static final String PLACEHOLDER_SECRET = "change-this-super-secret-key-in-production-min-32-chars";
 
     @Value("${app.jwt.secret}")
     private String secret;
@@ -22,7 +29,14 @@ public class JwtUtil {
     @Value("${app.jwt.expiration-ms}")
     private long expirationMs;
 
-    private SecretKey getSigningKey() {
+    @PostConstruct
+    void warnIfUsingPlaceholderSecret() {
+        if (PLACEHOLDER_SECRET.equals(secret)) {
+            log.warn("SECURITY WARNING: app.jwt.secret is still the example placeholder. Set JWT_SECRET to a unique random value before deploying.");
+        }
+    }
+
+    private SecretKey getSigningKey()  {
         byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
         if (keyBytes.length < 32) {
             throw new IllegalStateException(
