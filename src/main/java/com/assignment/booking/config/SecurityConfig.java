@@ -1,8 +1,7 @@
 package com.assignment.booking.config;
 
-import com.assignment.booking.security.CustomUserDetailsService;
-import com.assignment.booking.security.JwtAuthenticationFilter;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,7 +19,10 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.List;
+import com.assignment.booking.security.CustomUserDetailsService;
+import com.assignment.booking.security.JwtAuthenticationFilter;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
@@ -34,10 +36,10 @@ public class SecurityConfig {
     @org.springframework.beans.factory.annotation.Value("${app.cors.allowed-origins}")
     private List<String> allowedOrigins;
 
-    private static final String[] PUBLIC_ENDPOINTS = {
-            "/auth/login",
-            "/h2-console/**"
-    };
+    // H2 console is only ever needed for local/dev debugging against an in-memory DB.
+    // It defaults to disabled so it is never accidentally exposed as a public endpoint in production.
+    @org.springframework.beans.factory.annotation.Value("${spring.h2.console.enabled:false}")
+    private boolean h2ConsoleEnabled;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -63,16 +65,22 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin())) // needed for h2-console
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin())) // needed only when h2-console is enabled
+                .authorizeHttpRequests(auth -> {
+                    auth.requestMatchers("/auth/login").permitAll();
+                    if (h2ConsoleEnabled) {
+                        auth.requestMatchers("/h2-console/**").permitAll();
+                    }
+                    auth
+                        // Resources: everyone authenticated can read; only ADMIN can write.
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/resources/**").authenticated()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/resources/**").hasRole("ADMIN")
                         .requestMatchers(org.springframework.http.HttpMethod.PUT, "/resources/**").hasRole("ADMIN")
                         .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/resources/**").hasRole("ADMIN")
+                        // Reservations: fine-grained authorization enforced in service/controller layer.
                         .requestMatchers("/reservations/**").authenticated()
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated();
+                })
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
