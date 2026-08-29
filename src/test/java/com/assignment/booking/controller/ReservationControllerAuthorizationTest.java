@@ -26,12 +26,7 @@ import com.assignment.booking.entity.User;
 import com.assignment.booking.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-/**
- * Covers the most safety-critical requirements of the assignment:
- *  - reservation ownership is derived from the JWT, never trusted from the request body
- *  - USER can only see/manage their own reservations, ADMIN can see/manage all
- *  - filtering and pagination behave correctly
- */
+
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")

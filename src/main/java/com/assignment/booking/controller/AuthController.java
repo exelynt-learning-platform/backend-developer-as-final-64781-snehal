@@ -8,10 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * Authentication endpoints. Test with the Postman collection in /postman
- * ("Auth" folder -> Login as Admin / Login as User).
- */
+
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor

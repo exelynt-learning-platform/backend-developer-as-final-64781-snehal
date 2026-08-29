@@ -10,9 +10,6 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/**
- * Used by ADMIN to fully update a reservation (resource, time window, status, price).
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

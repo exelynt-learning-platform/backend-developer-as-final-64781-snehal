@@ -9,11 +9,6 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/**
- * Request payload for creating a reservation.
- * Note: the owning user is ALWAYS derived from the authenticated JWT principal
- * in the service layer, never from this DTO, to prevent identity spoofing.
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

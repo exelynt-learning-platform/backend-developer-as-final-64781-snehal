@@ -20,10 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 
-/**
- * Bookings for resources. USER manages only their own; ADMIN has full access.
- * Test with the Postman collection in /postman ("Reservations" folder).
- */
+
 @RestController
 @RequestMapping("/reservations")
 @RequiredArgsConstructor
@@ -31,15 +28,13 @@ public class ReservationController {
 
     private final ReservationService reservationService;
 
-    // Create a reservation for the authenticated user (owner comes from the JWT, not the request body)
     @PostMapping
     public ResponseEntity<ReservationResponse> create(@Valid @RequestBody ReservationRequest request,
                                                         @AuthenticationPrincipal CustomUserDetails principal) {
         return ResponseEntity.status(HttpStatus.CREATED).body(reservationService.create(request, principal));
     }
 
-    // Filtering (status/minPrice/maxPrice), pagination and sorting via Pageable (page, size, sort).
-    // ADMIN sees all reservations; USER sees only their own.
+ 
     @GetMapping
     public ResponseEntity<PageResponse<ReservationResponse>> findAll(
             @RequestParam(required = false) ReservationStatus status,
@@ -51,7 +46,6 @@ public class ReservationController {
                 reservationService.findAll(status, minPrice, maxPrice, pageable, principal)));
     }
 
-    // Owner or ADMIN only
     @GetMapping("/{id}")
     public ResponseEntity<ReservationResponse> findById(@PathVariable Long id,
                                                           @AuthenticationPrincipal CustomUserDetails principal) {

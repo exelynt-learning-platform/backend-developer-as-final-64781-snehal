@@ -13,11 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * Bookable resources (rooms, vehicles, equipment).
- * ADMIN has full CRUD; USER has read-only access.
- * Test with the Postman collection in /postman ("Resources" folder).
- */
 @RestController
 @RequestMapping("/resources")
 @RequiredArgsConstructor

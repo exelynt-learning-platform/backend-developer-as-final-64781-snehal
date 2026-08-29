@@ -11,14 +11,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-/**
- * Seeds the database with demo ADMIN/USER accounts and a handful of sample
- * resources on startup, so the API is immediately testable.
- *
- * Seed credentials (also documented in README):
- *   admin / Admin@123   (ROLE_ADMIN)
- *   user  / User@123    (ROLE_USER)
- */
+
 @Slf4j
 @Component
 @RequiredArgsConstructor

@@ -6,10 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Used for status-only transitions, e.g. a USER cancelling their own reservation,
- * or an ADMIN confirming/cancelling a reservation.
- */
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

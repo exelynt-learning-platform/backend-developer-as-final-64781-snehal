@@ -32,12 +32,7 @@ public class ReservationService {
     private final UserRepository userRepository;
     private final ResourceService resourceService;
 
-    /**
-     * Creates a reservation for the CURRENTLY AUTHENTICATED user.
-     * The user identity is intentionally taken from the security principal,
-     * never from the request body, to prevent a USER from booking on behalf
-     * of someone else.
-     */
+   
     @Transactional
     public ReservationResponse create(ReservationRequest request, CustomUserDetails principal) {
         validateTimeWindow(request.getStartTime(), request.getEndTime());
