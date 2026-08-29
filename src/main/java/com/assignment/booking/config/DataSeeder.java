@@ -23,10 +23,14 @@ public class DataSeeder implements CommandLineRunner {
     private final ResourceRepository resourceRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // Lets seeding be turned off entirely (e.g. in a real deployment) via SEED_ENABLED=false.
-    // Defaults to true so local/dev/test runs keep working exactly as before.
     @org.springframework.beans.factory.annotation.Value("${app.seed.enabled:true}")
     private boolean seedEnabled;
+
+    @org.springframework.beans.factory.annotation.Value("${app.seed.admin-password:Admin@123}")
+    private String adminSeedPassword;
+
+    @org.springframework.beans.factory.annotation.Value("${app.seed.user-password:User@123}")
+    private String userSeedPassword;
 
     @Override
     public void run(String... args) {
@@ -42,7 +46,7 @@ public class DataSeeder implements CommandLineRunner {
         if (!userRepository.existsByUsername("admin")) {
             userRepository.save(User.builder()
                     .username("admin")
-                    .password(passwordEncoder.encode("Admin@123"))
+                    .password(passwordEncoder.encode(adminSeedPassword))
                     .role(Role.ADMIN)
                     .build());
             log.info("Seeded ADMIN user");
@@ -51,7 +55,7 @@ public class DataSeeder implements CommandLineRunner {
         if (!userRepository.existsByUsername("user")) {
             userRepository.save(User.builder()
                     .username("user")
-                    .password(passwordEncoder.encode("User@123"))
+                    .password(passwordEncoder.encode(userSeedPassword))
                     .role(Role.USER)
                     .build());
             log.info("Seeded USER user");
