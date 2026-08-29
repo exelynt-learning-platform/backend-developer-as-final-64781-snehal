@@ -1,5 +1,12 @@
 package com.assignment.booking.service;
 
+import java.math.BigDecimal;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.assignment.booking.dto.reservation.ReservationRequest;
 import com.assignment.booking.dto.reservation.ReservationResponse;
 import com.assignment.booking.dto.reservation.ReservationStatusUpdateRequest;
@@ -10,20 +17,16 @@ import com.assignment.booking.entity.Resource;
 import com.assignment.booking.entity.Role;
 import com.assignment.booking.entity.User;
 import com.assignment.booking.exception.BadRequestException;
-import com.assignment.booking.exception.ResourceNotFoundException;
 import com.assignment.booking.exception.ForbiddenAccessException;
+import com.assignment.booking.exception.ResourceNotFoundException;
 import com.assignment.booking.repository.ReservationRepository;
 import com.assignment.booking.repository.UserRepository;
 import com.assignment.booking.security.CustomUserDetails;
 import com.assignment.booking.specification.ReservationSpecification;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-
+import lombok.extern.slf4j.Slf4j;
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReservationService {
@@ -52,7 +55,9 @@ public class ReservationService {
                 .price(request.getPrice())
                 .build();
 
-        return toResponse(reservationRepository.save(reservation));
+        Reservation saved = reservationRepository.save(reservation);
+        log.info("Reservation {} created by user {} for resource {}", saved.getId(), user.getUsername(), resource.getId());
+        return toResponse(saved);
     }
 
     @Transactional(readOnly = true)
@@ -89,7 +94,9 @@ public class ReservationService {
         }
 
         reservation.setStatus(request.getStatus());
-        return toResponse(reservationRepository.save(reservation));
+        Reservation saved = reservationRepository.save(reservation);
+        log.info("Reservation {} status changed to {} by user {}", id, request.getStatus(), principal.getUsername());
+        return toResponse(saved);
     }
 
     @Transactional
@@ -115,6 +122,7 @@ public class ReservationService {
     public void delete(Long id) {
         Reservation reservation = getEntity(id);
         reservationRepository.delete(reservation);
+        log.info("Reservation {} deleted", id);
     }
 
     private void validateNoOverlap(Long resourceId, java.time.LocalDateTime start,
@@ -144,7 +152,10 @@ public class ReservationService {
     }
 
     private void validateTimeWindow(java.time.LocalDateTime start, java.time.LocalDateTime end) {
-        if (start != null && end != null && !end.isAfter(start)) {
+        if (start == null || end == null) {
+            throw new BadRequestException("startTime and endTime are required");
+        }
+        if (!end.isAfter(start)) {
             throw new BadRequestException("endTime must be after startTime");
         }
     }

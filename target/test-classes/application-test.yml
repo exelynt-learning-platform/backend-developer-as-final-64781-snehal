@@ -11,5 +11,7 @@ spring:
 
 app:
   jwt:
-    secret: test-secret-key-for-unit-tests-only-must-be-32-bytes-min
-    expiration-ms: 3600000
+   secret: test-secret-key-for-unit-tests-only-must-be-32-bytes-min
+   expiration-ms: 3600000
+   cors:
+      allowed-origins: http://localhost:3000

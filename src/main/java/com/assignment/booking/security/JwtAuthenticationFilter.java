@@ -11,6 +11,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -23,7 +24,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -71,11 +74,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
 
         } catch (JwtException | IllegalArgumentException e) {
-            sendError(
-                    response,
-                    HttpStatus.UNAUTHORIZED,
-                    "Invalid or expired JWT token"
-            );
+            log.warn("Rejected request to {} due to invalid JWT: {}", request.getRequestURI(), e.getMessage());
+            sendError(response, HttpStatus.UNAUTHORIZED, "Invalid or expired JWT token");
+        } catch (UsernameNotFoundException e) {
+            // Token is well-formed and signed correctly, but the user it names no longer exists
+            // (e.g. deleted after the token was issued but before it expired).
+            log.warn("Rejected request to {}: token subject no longer exists", request.getRequestURI());
+            sendError(response, HttpStatus.UNAUTHORIZED, "Invalid or expired JWT token");
         }
     }
 

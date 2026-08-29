@@ -31,6 +31,9 @@ public class SecurityConfig {
     private final CustomUserDetailsService userDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    @org.springframework.beans.factory.annotation.Value("${app.cors.allowed-origins}")
+    private List<String> allowedOrigins;
+
     private static final String[] PUBLIC_ENDPOINTS = {
             "/auth/login",
             "/h2-console/**"
@@ -63,12 +66,10 @@ public class SecurityConfig {
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin())) // needed for h2-console
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                        // Resources: everyone authenticated can read; only ADMIN can write.
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/resources/**").authenticated()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/resources/**").hasRole("ADMIN")
                         .requestMatchers(org.springframework.http.HttpMethod.PUT, "/resources/**").hasRole("ADMIN")
                         .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/resources/**").hasRole("ADMIN")
-                        // Reservations: fine-grained authorization enforced in service/controller layer.
                         .requestMatchers("/reservations/**").authenticated()
                         .anyRequest().authenticated()
                 )
@@ -81,7 +82,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedOriginPatterns(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
