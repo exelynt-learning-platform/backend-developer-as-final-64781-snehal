@@ -343,3 +343,5 @@ Set `SERVER_PORT` to a free port, e.g. `SERVER_PORT=8081`.
 ## Booking conflict prevention
 
 The API prevents overlapping active reservations for the same resource. PENDING and CONFIRMED reservations reserve the resource; CANCELLED reservations do not block a new booking. When an ADMIN updates a reservation, the current reservation is excluded from the overlap check.
+
+________________________________________________________________________________________________
