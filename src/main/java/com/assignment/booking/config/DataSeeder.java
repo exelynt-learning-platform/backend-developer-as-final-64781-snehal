@@ -1,15 +1,17 @@
 package com.assignment.booking.config;
 
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
+
 import com.assignment.booking.entity.Resource;
 import com.assignment.booking.entity.Role;
 import com.assignment.booking.entity.User;
 import com.assignment.booking.repository.ResourceRepository;
 import com.assignment.booking.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
 
 
 @Slf4j
@@ -21,8 +23,17 @@ public class DataSeeder implements CommandLineRunner {
     private final ResourceRepository resourceRepository;
     private final PasswordEncoder passwordEncoder;
 
+    // Lets seeding be turned off entirely (e.g. in a real deployment) via SEED_ENABLED=false.
+    // Defaults to true so local/dev/test runs keep working exactly as before.
+    @org.springframework.beans.factory.annotation.Value("${app.seed.enabled:true}")
+    private boolean seedEnabled;
+
     @Override
     public void run(String... args) {
+        if (!seedEnabled) {
+            log.info("Data seeding is disabled (app.seed.enabled=false)");
+            return;
+        }
         seedUsers();
         seedResources();
     }
