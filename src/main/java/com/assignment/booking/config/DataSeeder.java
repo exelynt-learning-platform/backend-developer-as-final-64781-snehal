@@ -38,6 +38,10 @@ public class DataSeeder implements CommandLineRunner {
             log.info("Data seeding is disabled (app.seed.enabled=false)");
             return;
         }
+        if ("Admin@123".equals(adminSeedPassword) || "User@123".equals(userSeedPassword)) {
+            log.warn("SECURITY WARNING: seed accounts are using default example passwords. "
+                    + "Set ADMIN_SEED_PASSWORD / USER_SEED_PASSWORD before deploying anywhere other than local development.");
+        }
         seedUsers();
         seedResources();
     }

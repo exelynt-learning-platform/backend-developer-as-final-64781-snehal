@@ -29,10 +29,22 @@ public class JwtUtil {
     @Value("${app.jwt.expiration-ms}")
     private long expirationMs;
 
+    @Value("${app.jwt.require-strong-secret:false}")
+    private boolean requireStrongSecret;
+
     @PostConstruct
     void warnIfUsingPlaceholderSecret() {
         if (PLACEHOLDER_SECRET.equals(secret)) {
-            log.warn("SECURITY WARNING: app.jwt.secret is still the example placeholder. Set JWT_SECRET to a unique random value before deploying.");
+            if (requireStrongSecret) {
+                throw new IllegalStateException(
+                        "app.jwt.secret is still the example placeholder. Set JWT_SECRET to a unique, "
+                                + "random 32+ character value (app.jwt.require-strong-secret is enabled).");
+            }
+            log.warn("=================================================================================");
+            log.warn("SECURITY WARNING: app.jwt.secret is still set to the example placeholder value.");
+            log.warn("Set the JWT_SECRET environment variable to a unique, random 32+ character value");
+            log.warn("before deploying this application anywhere other than local development.");
+            log.warn("=================================================================================");
         }
     }
 
